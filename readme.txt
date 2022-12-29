@@ -20,3 +20,10 @@ Use the superuser details in the admin with the 127.0.0.1:8000/admin login link 
 
 After use 127.0.0.1:8000 to land on the home page
 
+
+Project Duration
+
+Start time 21:22
+End time  21:37
+
+
