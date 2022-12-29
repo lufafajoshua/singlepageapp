@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Single page app{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Single Page App Search</h1>
+    <!-- BEGIN SEARCH AREA-->
+    
+    <form action="{% url 'myapp:search' %}" method="GET" value="{{request.GET.q}}">
+        <h6>Search </h6>   
+        Search <input type="text" name="q" value="{{request.GET.q}}" placeholder="Search Data"/>
+        <input type="submit" name="submit-btn" value="Search"/>
+    </form>
+    <br />
+    <div class="table-responsive">
+        <table class="results-table" id="results-table">
+            <thead>
+            <tr>
+                <th style="width:10%">ID</th>
+                <th style="width:10%">Name</th>
+                <th style="width:10%">Age</th>
+                <th style="width:10%">Telephone</th>
+                <th style="width:10%">Gender</th>
+                <th style="width:10%">Address</th>
+                <th style="width:10%">Marital Status</th>
+                <th style="width:10%">Email</th>
+                    <th style="width:10%"></th>
+            </tr>
+            </thead>
+            <tbody>
+                
+            {% if submitbutton == 'Search' and request.GET.q != '' %}
+            {% if results %}
+            <h2>Results for <b>{{ request.GET.q }}</b></h2>
+            {% for result in results %}
+                <tr>
+                
+                    <td>
+                    {{result.id}}
+                    </td>
+                    <td>
+                        {{result.name}}
+                    </td>
+                    <td>
+                        {{result.age}}
+                    </td>
+                    <td>
+                        {{result.telephone}}
+                    </td>
+                    <td>
+                        {{result.gender}}
+                    </td>
+                    <td>
+                        {{result.address}}
+                    </td>
+                    <td>
+                    {{result.marital_status}}
+                    </td>
+                    <td>
+                        {{result.email}}
+                    </td>
+                    <td >
+                        <button type="button"
+                                class="btn btn-warning btn-sm js-update-data"
+                                data-url="{% url 'myapp:update' result.id %}">
+                        <span class="glyphicon glyphicon-pencil"></span> Edit
+                        </button>
+                    </td>
+    
+                </tr>
+            {% endfor%} 
+            {% else %}
+            <h5>No search results for this query</h5>
+            {% endif %}
+            {% endif %}   
+            </tbody>
+        </table>
+    </div>    
+    <!-- END SEARCH AREA-->
+    
+  
+    <!-- BEGIN ALL DATA AREA-->
+    <div class="row">
+        <div class="col-lg-12">
+        <div class="panel panel-default"  style="padding: 15px;">
+
+            <div class="table-responsive">
+                <table class="table" id="data-table">
+                    <thead>
+                    <tr>
+                        <th style="width:10%">ID</th>
+                        <th style="width:10%">Name</th>
+                        <th style="width:10%">Age</th>
+                        <th style="width:10%">Telephone</th>
+                        <th style="width:10%">Gender</th>
+                        <th style="width:10%">Address</th>
+                        <th style="width:10%">Marital Status</th>
+                        <th style="width:10%">Email</th>
+                            <th style="width:10%"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    
+                    {% for data_object in all_data%}
+                       
+                        <tr>
+                            <td>
+                               {{data_object.id}}
+                            </td>
+                            <td>
+                                {{data_object.name}}
+                            </td>
+                            <td>
+                                {{data_object.age}}
+                            </td>
+                            <td>
+                                {{data_object.telephone}}
+                            </td>
+                            <td>
+                                {{data_object.gender}}
+                            </td>
+                            <td>
+                                {{data_object.address}}
+                            </td>
+                            <td>
+                               {{data_object.marital_status}}
+                            </td>
+                            <td>
+                                {{data_object.email}}
+                            </td>
+                            <td >
+                                <button type="button"
+                                        class="btn btn-warning btn-sm js-update-data"
+                                        data-url="{% url 'myapp:update' data_object.id %}">
+                                  <span class="glyphicon glyphicon-pencil"></span> Edit
+                                </button>
+                            </td>
+
+                        </tr> 
+                    {% endfor%} 
+                      
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    </div>
+    <!-- END OF ALL DATA AREA-->
+
+    <div class="chart-area">
+
+        <img src="data:image/png;base64,{{ graphic|safe }}">
+    </div>    
+
+    <!-- THE MODAL WE WILL BE USING -->
+    <div class="modal fade" id="modal-data">
+        <div class="modal-dialog">
+        <div class="modal-content">
+        </div>    
+    
+    </div>
+
+   
+
+
+{% endblock %}
+{% block javascript %}
+    <script type='text/javascript'>
+
+        
+        $(function () {
+
+            /* Functions */
+            
+            var loadForm = function () {
+            var btn = $(this);
+            $.ajax({
+                url: btn.attr("data-url"),
+                type: 'get',
+                dataType: 'json',
+                beforeSend: function () {
+                $("#modal-data").modal("show");
+                },
+                success: function (data) {
+                $("#modal-data .modal-content").html(data.html_form);
+                }
+            });
+            };
+        
+            var saveForm = function () {
+            var form = $(this);
+            $.ajax({
+                url: form.attr("action"),
+                data: form.serialize(),
+                type: form.attr("method"),
+                dataType: 'json',
+                success: function (data) {
+                if (data.form_is_valid) {
+                    $("#data-table tbody,#results-table tbody").html(data.html_data_list);
+                    $("#modal-data").modal("hide");
+                    $('.results-table').hide();
+                    window.location.href = "/";
+                }
+                else {
+                    $("#modal-data .modal-content").html(data.html_form);
+                }
+                }
+            });
+            return false;
+            };
+        
+
+        
+            // Update data
+            $("#data-table,#results-table").on("click", ".js-update-data", loadForm);
+            $("#modal-data").on("submit", ".js-data-update-form", saveForm);
+            //Hide the results table upon update
+            
+            
+            
+        
+        });
+    </script>    
+
+{% endblock javascript %}
